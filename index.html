@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>shadowalvan — writeups</title>
+<title>YOUR_HANDLE — writeups</title>
 <meta name="description" content="EDIT ME: one-line description of your site for search engines / link previews.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,7 +77,7 @@
     border:2px solid var(--green); display:flex; align-items:center; justify-content:center;
     font-family:var(--font-display); font-size:2.6rem; color:var(--green);
     text-shadow:0 0 14px rgba(70,255,160,.6); background:var(--bg-inset-2);
-    box-shadow:0 0 24px rgba(70,255,160,.12);
+    box-shadow:0 0 24px rgba(70,255,160,.12); object-fit:cover;
   }
   .site-title{
     font-family:var(--font-display); font-size:2.2rem; letter-spacing:.03em; margin:0 0 .3rem;
@@ -181,15 +181,13 @@
 
   <!-- ============ PROFILE SIDEBAR — edit everything below ============ -->
   <aside class="profile">
-    <div class="avatar" aria-hidden="true">&gt;_</div>
-    <!--<div class="avatar" aria-hidden="true"><img src="assets/avatar.png" alt="..."></div>
-    
-    <!-- EDIT: replace "&gt;_" above with <img src="assets/avatar.png" alt="..."> if you have a real avatar -->
+    <img class="avatar" src="assets/avatar-prompt.svg" alt="YOUR_HANDLE avatar" width="104" height="104">
+    <!-- EDIT: swap src for assets/avatar-hood.svg for the hooded-figure version, or use your own image -->
 
-    <h1 class="site-title">shadowalvan</h1>
+    <h1 class="site-title">YOUR_HANDLE</h1>
     <!-- EDIT: your name / alias -->
 
-    <p class="site-tagline">EDIT ME: "Notes from CTFs."</p>
+    <p class="site-tagline">EDIT ME: one-line tagline — e.g. "Notes from guest bind to Domain Admin."</p>
 
     <ul class="profile-nav">
       <li><a href="index.html"><i class="fa-solid fa-house"></i> ./home</a></li>
@@ -200,17 +198,17 @@
 
     <div class="social-row">
       <!-- EDIT: swap href="#" for your real profile URLs, delete any you don't want -->
-      <a href="shadowalvan" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-      <a href="shadow_alvan" aria-label="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
-      <a href="a.lva.n" aria-label="TryHackMe"><i class="fa-solid fa-flag"></i></a>
-      <a href="mailto:alvan.chumba@kitocha.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+      <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+      <a href="#" aria-label="X / Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="#" aria-label="TryHackMe"><i class="fa-solid fa-flag"></i></a>
+      <a href="mailto:you@example.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
     </div>
 
     <p id="about" class="profile-foot">
-      EDIT ME: Cyber Security | Red Teamer | Aspiring Ethical Hacker | Digital forensics | Threat Hunter
+      EDIT ME: 2–3 sentence bio. Who you are, what you focus on (AD, web, binary exploitation...), certs if any, and what this site is for.
     </p>
 
-    <p class="profile-foot" style="margin-top:1.4rem;">© 2026 SHADOWALVAN.<br>Built by hand, no framework.</p>
+    <p class="profile-foot" style="margin-top:1.4rem;">© 2026 YOUR_HANDLE.<br>Built by hand, no framework.</p>
   </aside>
   <!-- ============ END PROFILE SIDEBAR ============ -->
 
@@ -231,6 +229,24 @@
           <a href="#tags">active-directory</a>
           <a href="#tags">kerberoasting</a>
           <a href="#tags">bloodhound</a>
+          <a href="#tags">thm</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="post-card">
+      <div class="post-thumb">AD</div>
+      <div class="post-body">
+        <h2><a href="writeups/soupedecode01.html">SoupedeCode 01 — TryHackMe Writeup</a></h2>
+        <p class="post-excerpt">Guest SMB session → RID cycling for the full user list → a username-as-password spray → Kerberoasting → a backup share full of raw machine-account NTLM hashes → pass-the-hash to root.</p>
+        <div class="post-meta">
+          <span><i class="fa-regular fa-calendar"></i>Aug 5, 2025</span>
+          <span><i class="fa-regular fa-clock"></i>7 min read</span>
+        </div>
+        <div class="post-tags">
+          <a href="#tags">active-directory</a>
+          <a href="#tags">kerberoasting</a>
+          <a href="#tags">pass-the-hash</a>
           <a href="#tags">thm</a>
         </div>
       </div>
@@ -260,6 +276,7 @@
         <a href="#">active-directory</a>
         <a href="#">kerberoasting</a>
         <a href="#">bloodhound</a>
+        <a href="#">pass-the-hash</a>
         <a href="#">thm</a>
         <a href="#">privesc</a>
         <a href="#">windows</a>
@@ -269,6 +286,7 @@
       <h3>recent</h3>
       <ul>
         <li><a href="writeups/operation-endgames.html">Operation EndGames</a></li>
+        <li><a href="writeups/soupedecode01.html">SoupedeCode 01</a></li>
       </ul>
     </div>
   </aside>
